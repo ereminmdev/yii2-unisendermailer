@@ -1,0 +1,24 @@
+{
+  "name": "ereminmdev/yii2-unisendermailer",
+  "description": "The Unisender integration for the Yii framework",
+  "keywords": ["yii2","unisender","mail","email","mailer"],
+  "type": "yii2-extension",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Michael Eremin",
+      "email": "ereminmdev@gmail.com",
+      "role": "developer"
+    }
+  ],
+  "require": {
+    "php": ">=7.0",
+    "yiisoft/yii2": "~2.0.8",
+    "unisender/api-wrapper": "^1.2"
+  },
+  "autoload": {
+    "psr-4": {
+      "ereminmdev\\yii2\\unisendermailer\\": ""
+    }
+  }
+}

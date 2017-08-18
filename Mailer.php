@@ -35,6 +35,10 @@ class Mailer extends BaseMailer
      * @var string
      */
     public $senderEmail;
+    /**
+     * @var string Sender name from 3 up to 11 symbols of latin characters and digits.
+     */
+    public $smsSenderName;
 
     /**
      * @var string encoding charset
@@ -106,6 +110,13 @@ class Mailer extends BaseMailer
             }
             if (!$this->senderEmail) {
                 throw new InvalidConfigException('"' . get_class($this) . '::senderEmail" should be specified.');
+            }
+
+            if (!$this->smsSenderName) {
+                throw new InvalidConfigException('"' . get_class($this) . '::smsSenderName" should be specified.');
+            }
+            if (!preg_match('/^[a-zA-Z0-9]{3,11}$/', $this->smsSenderName)) {
+                throw new InvalidConfigException('"' . get_class($this) . '::smsSenderName" should be from 3 up to 11 symbols of latin characters and digits.');
             }
 
             $this->_api = new UnisenderApi($this->apiKey, $encoding, $this->retryCount, $this->timeout, $this->compression, $this->platform);
@@ -248,7 +259,7 @@ class Mailer extends BaseMailer
 
         $params = [
             'phone' => implode(',', $address),
-            'sender' => mb_substr($this->senderName, 0, 11),
+            'sender' => $this->smsSenderName,
             'text' => mb_substr($message->getTextBody(), 0, 1000),
         ];
 

@@ -285,6 +285,8 @@ class Mailer extends BaseMailer
 
                 $result = $this->p($this->api->createCampaign([
                     'message_id' => $messageId,
+                    'contacts' => implode(',', $address),
+                    'defer' => 1,
                 ]));
 
                 return $result !== false ? $result : false;

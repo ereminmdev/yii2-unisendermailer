@@ -3,12 +3,13 @@
 namespace ereminmdev\yii2\unisendermailer;
 
 use yii\mail\BaseMessage;
-use yii\mail\MailerInterface;
 
 /**
  * Class Message
  * @package ereminmdev\yii2\unisendermailer
  *
+ * @see Mailer
+
  * @property int $type
  * @property int $listId
  * @property mixed $cc
@@ -28,7 +29,7 @@ class Message extends BaseMessage
     const TYPE_SMS = 2;
 
     /**
-     * @var int type of message. Default to e-mail
+     * @var int type of message. Defaults to e-mail.
      */
     protected $_type = 1;
     /**
@@ -46,7 +47,6 @@ class Message extends BaseMessage
     protected $_textBody;
     protected $_htmlBody;
     protected $_attachments = [];
-
 
     /**
      * @return int
@@ -319,20 +319,20 @@ class Message extends BaseMessage
     }
 
     /**
-     * @param MailerInterface|null $mailer
+     * @param Mailer|null $mailer
      * @return bool
      */
-    public function sendEmail(MailerInterface $mailer = null)
+    public function sendEmail(Mailer $mailer = null)
     {
         $this->type = self::TYPE_EMAIL;
         return parent::send($mailer);
     }
 
     /**
-     * @param MailerInterface|null $mailer
+     * @param Mailer|null $mailer
      * @return bool
      */
-    public function sendSms(MailerInterface $mailer = null)
+    public function sendSms(Mailer $mailer = null)
     {
         $this->type = self::TYPE_SMS;
         return parent::send($mailer);

@@ -23,7 +23,7 @@ to the require section of your composer.json.
 Usage
 -----
 
-To use this extension,  simply add the following code in your application configuration:
+To use this extension, simply add the following code in your application configuration:
 
 ```php
 return [
@@ -32,8 +32,10 @@ return [
         'uniMailer' => [
             'class' => 'ereminmdev\yii2\unisendermailer\Mailer',
             'viewPath' => '@common/mail',
+            'platform' => 'Yii',
             'apiKey' => '...',
             'listId' => ...,
+            'maxSimpleCount' => 0,
             'senderName' => '...',
             'senderEmail' => '...',
             'smsSenderName' => '...',
@@ -59,7 +61,8 @@ Yii::$app->uniMailer->compose('contact/html')
     ->setFrom('from@domain.com')
     ->setTo($form->phone)
     ->setSubject($form->subject)
-    ->setType(Message::TYPE_SMS)->send(); // or ->sendSms();
+    ->setType(Message::TYPE_SMS)
+    ->send(); // or ->sendSms();
 ```
 
 For further instructions refer to the [related section in the Yii Definitive Guide](http://www.yiiframework.com/doc-2.0/guide-tutorial-mailing.html).

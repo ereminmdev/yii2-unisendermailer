@@ -39,7 +39,6 @@ class Mailer extends BaseMailer
      * @var string Sender name from 3 up to 11 symbols of latin characters and digits.
      */
     public $smsSenderName;
-
     /**
      * @var string encoding charset
      */
@@ -72,6 +71,10 @@ class Mailer extends BaseMailer
      * @var string message default class name
      */
     public $messageClass = 'ereminmdev\yii2\unisendermailer\Message';
+    /**
+     * @var bool importing contacts before sending
+     */
+    public $isImportContacts = true;
 
     /**
      * @var UnisenderApi
@@ -82,11 +85,10 @@ class Mailer extends BaseMailer
      */
     protected $_errors = [];
 
-
     /**
      * @param null $view
      * @param array $params
-     * @return Message
+     * @return Message|\yii\mail\MessageInterface
      */
     public function compose($view = null, array $params = [])
     {
@@ -125,7 +127,9 @@ class Mailer extends BaseMailer
     }
 
     /**
-     * Get Unisender message template. See https://www.unisender.com/ru/support/integration/api/gettemplate
+     * Get Unisender message template.
+     * @see https://www.unisender.com/ru/support/integration/api/gettemplate
+     *
      * @param array $params
      * @return mixed|false
      */
@@ -135,7 +139,9 @@ class Mailer extends BaseMailer
     }
 
     /**
-     * Send simple e-mail message. See https://www.unisender.com/ru/support/integration/api/sendemail
+     * Send simple e-mail message.
+     * @see https://www.unisender.com/ru/support/integration/api/sendemail
+     *
      * @param array $params
      * @return bool
      */
@@ -145,7 +151,9 @@ class Mailer extends BaseMailer
     }
 
     /**
-     * Send simple sms message. See https://www.unisender.com/ru/support/integration/api/sendsms
+     * Send simple sms message.
+     * @see https://www.unisender.com/ru/support/integration/api/sendsms
+     *
      * @param array $params
      * @return bool
      */
@@ -155,7 +163,8 @@ class Mailer extends BaseMailer
     }
 
     /**
-     * Return existing list id or create new one
+     * Return existing list id or create new one.
+     *
      * @param Message $message
      * @return int
      */
@@ -176,8 +185,8 @@ class Mailer extends BaseMailer
     }
 
     /**
-     * @param $field_names
-     * @param $data
+     * @param array $field_names
+     * @param array $data
      * @return bool
      */
     public function importContacts($field_names, $data)
@@ -220,11 +229,15 @@ class Mailer extends BaseMailer
             return $this->sendEmail(ArrayHelper::merge($trackParams, $params));
         }
 
-        $contacts = array_map(function ($email) use ($listId) {
-            return [$email, $listId];
-        }, $address);
+        if ($this->isImportContacts) {
+            $contacts = array_map(function ($email) use ($listId) {
+                return [$email, $listId];
+            }, $address);
 
-        $result = $this->importContacts(['email', 'email_list_ids'], $contacts);
+            $result = $this->importContacts(['email', 'email_list_ids'], $contacts);
+        } else {
+            $result = true;
+        }
 
         if ($result !== false) {
             $data = $params;
@@ -267,11 +280,15 @@ class Mailer extends BaseMailer
             return $this->sendSms($params);
         }
 
-        $contacts = array_map(function ($phone) use ($listId) {
-            return [$phone, $listId];
-        }, $address);
+        if ($this->isImportContacts) {
+            $contacts = array_map(function ($phone) use ($listId) {
+                return [$phone, $listId];
+            }, $address);
 
-        $result = $this->importContacts(['phone', 'phone_list_ids'], $contacts);
+            $result = $this->importContacts(['phone', 'phone_list_ids'], $contacts);
+        } else {
+            $result = true;
+        }
 
         if ($result !== false) {
             $result = $this->p($this->api->createSmsMessage([
@@ -312,7 +329,8 @@ class Mailer extends BaseMailer
     }
 
     /**
-     * Process result
+     * Process result.
+     *
      * @param string $result
      * @return mixed|false
      */

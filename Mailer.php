@@ -7,6 +7,7 @@ use Yii;
 use yii\base\InvalidConfigException;
 use yii\helpers\ArrayHelper;
 use yii\mail\BaseMailer;
+use yii\mail\MessageInterface;
 
 /**
  * Class Mailer
@@ -88,7 +89,7 @@ class Mailer extends BaseMailer
     /**
      * @param null $view
      * @param array $params
-     * @return Message|\yii\mail\MessageInterface
+     * @return Message|MessageInterface
      */
     public function compose($view = null, array $params = [])
     {
@@ -339,14 +340,14 @@ class Mailer extends BaseMailer
         if ($result) {
             $jsonObj = json_decode($result);
             if (null === $jsonObj) {
-                $this->addError(Yii::t('app', 'Invalid JSON'));
+                $this->addError(Yii::t('app', 'Unisender: Invalid JSON'));
             } elseif (!empty($jsonObj->error)) {
-                $this->addError(Yii::t('app', 'An error occured: {error}(code: {code})', ['error' => $jsonObj->error, 'code' => $jsonObj->code]));
+                $this->addError(Yii::t('app', 'Unisender: An error occured: {error}(code: {code})', ['error' => $jsonObj->error, 'code' => $jsonObj->code]));
             } else {
                 return $jsonObj->result;
             }
         } else {
-            $this->addError(Yii::t('app', 'API access error'));
+            $this->addError(Yii::t('app', 'Unisender: API access error'));
         }
         return false;
     }

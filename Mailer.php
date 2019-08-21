@@ -76,6 +76,10 @@ class Mailer extends BaseMailer
      * @var bool importing contacts before sending
      */
     public $isImportContacts = true;
+    /**
+     * @var string prefix for error messages and logs
+     */
+    public $errorPrefix = 'Unisender: ';
 
     /**
      * @var UnisenderApi
@@ -340,14 +344,14 @@ class Mailer extends BaseMailer
         if ($result) {
             $jsonObj = json_decode($result);
             if (null === $jsonObj) {
-                $this->addError(Yii::t('app', 'Unisender: Invalid JSON'));
+                $this->addError(Yii::t('app', 'Invalid JSON'));
             } elseif (!empty($jsonObj->error)) {
-                $this->addError(Yii::t('app', 'Unisender: An error occured: {error}(code: {code})', ['error' => $jsonObj->error, 'code' => $jsonObj->code]));
+                $this->addError(Yii::t('app', 'An error occured: {error}(code: {code})', ['error' => $jsonObj->error, 'code' => $jsonObj->code]));
             } else {
                 return $jsonObj->result;
             }
         } else {
-            $this->addError(Yii::t('app', 'Unisender: API access error'));
+            $this->addError(Yii::t('app', 'API access error'));
         }
         return false;
     }
@@ -357,6 +361,8 @@ class Mailer extends BaseMailer
      */
     public function addError($message)
     {
+        $message = $this->errorPrefix . $message;
+
         $this->_errors[] = $message;
 
         Yii::error($message, __METHOD__);
@@ -401,7 +407,7 @@ class Mailer extends BaseMailer
             $address = implode(', ', array_keys($address));
         }
 
-        Yii::info('Sending email "' . $message->getSubject() . '" to "' . $address . '"', __METHOD__);
+        Yii::info($this->errorPrefix . 'Sending email "' . $message->getSubject() . '" to "' . $address . '"', __METHOD__);
 
         if ($message->type == Message::TYPE_EMAIL) {
             return $this->createEmailMessage($message);

@@ -14,7 +14,7 @@
   "require": {
     "php": ">=7.0",
     "yiisoft/yii2": "~2.0.8",
-    "unisender/api-wrapper": "^1.2"
+    "unisender/api-wrapper": "~1.2"
   },
   "autoload": {
     "psr-4": {

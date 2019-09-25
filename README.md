@@ -39,6 +39,7 @@ return [
             'senderName' => '...',
             'senderEmail' => '...',
             'smsSenderName' => '...',
+            'messageLang' => 'en', 
         ],
     ],
 ];

@@ -45,6 +45,10 @@ class Mailer extends BaseMailer
      */
     public $encoding;
     /**
+     * @var string ru, it, ua и en (will translate to english: da, de, es, fr, nl, pl, pt, tr)
+     */
+    public $messageLang = 'en';
+    /**
      * @var int timeout
      */
     public $timeout;
@@ -223,6 +227,7 @@ class Mailer extends BaseMailer
             'subject' => $message->getSubject(),
             'body' => $message->getHtmlBody(),
             'list_id' => $listId,
+            'lang' => $this->messageLang,
         ];
 
         $trackParams = [

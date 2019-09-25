@@ -41,13 +41,13 @@ class Mailer extends BaseMailer
      */
     public $smsSenderName;
     /**
+     * @var string Two-letter language code for the string with the unsubscribe link that is added to each letter automatically.
+     */
+    public $messageLang;
+    /**
      * @var string encoding charset
      */
     public $encoding;
-    /**
-     * @var string ru, it, ua и en (will translate to english: da, de, es, fr, nl, pl, pt, tr)
-     */
-    public $messageLang = 'en';
     /**
      * @var int timeout
      */
@@ -93,6 +93,15 @@ class Mailer extends BaseMailer
      * @var array of error messages
      */
     protected $_errors = [];
+
+    /**
+     * Initializes the object.
+     */
+    public function init()
+    {
+        parent::init();
+        $this->messageLang = $this->messageLang ?: mb_substr(Yii::$app->language, 0, 2);
+    }
 
     /**
      * @param null $view

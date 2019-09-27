@@ -25,6 +25,10 @@ class Mailer extends BaseMailer
      */
     public $apiKey;
     /**
+     * @var string Unisender api language
+     */
+    public $apiLanguage;
+    /**
      * @var int Unisender list id
      */
     public $listId;
@@ -43,7 +47,7 @@ class Mailer extends BaseMailer
     /**
      * @var string Two-letter language code for the string with the unsubscribe link that is added to each letter automatically.
      */
-    public $messageLang;
+    public $messageLanguage;
     /**
      * @var string encoding charset
      */
@@ -100,7 +104,10 @@ class Mailer extends BaseMailer
     public function init()
     {
         parent::init();
-        $this->messageLang = $this->messageLang ?: mb_substr(Yii::$app->language, 0, 2);
+
+        $currentLanguage = mb_substr(Yii::$app->language, 0, 2);
+        $this->apiLanguage = $this->apiLanguage ?: $currentLanguage;
+        $this->messageLanguage = $this->messageLanguage ?: $currentLanguage;
     }
 
     /**
@@ -139,7 +146,10 @@ class Mailer extends BaseMailer
                 throw new InvalidConfigException('"' . get_class($this) . '::smsSenderName" should be from 3 up to 11 symbols of latin characters and digits.');
             }
 
-            $this->_api = new UnisenderApi($this->apiKey, $encoding, $this->retryCount, $this->timeout, $this->compression, $this->platform);
+            $api = new UnisenderApi($this->apiKey, $encoding, $this->retryCount, $this->timeout, $this->compression, $this->platform);
+            $api->setApiHostLanguage($this->apiLanguage);
+
+            $this->_api = $api;
         }
         return $this->_api;
     }
@@ -236,7 +246,7 @@ class Mailer extends BaseMailer
             'subject' => $message->getSubject(),
             'body' => $message->getHtmlBody(),
             'list_id' => $listId,
-            'lang' => $this->messageLang,
+            'lang' => $this->messageLanguage,
         ];
 
         $trackParams = [

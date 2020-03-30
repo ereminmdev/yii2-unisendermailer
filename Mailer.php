@@ -222,10 +222,15 @@ class Mailer extends BaseMailer
         $result = false;
         $chunks = array_chunk($data, 500, true);
         foreach ($chunks as $chunk) {
-            $result = $result || $this->p($this->api->importContacts([
-                    'field_names' => $field_names,
-                    'data' => $chunk,
-                ]));
+            $res = $this->p($this->api->importContacts([
+                'field_names' => $field_names,
+                'data' => $chunk,
+                'overwrite_tags' => 1,
+            ]));
+            foreach ($res->log as $err) {
+                $this->addError($err->message);
+            }
+            $result = $result || $res->total;
         }
         return $result;
     }

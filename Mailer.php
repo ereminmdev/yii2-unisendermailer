@@ -232,7 +232,7 @@ class Mailer extends BaseMailer
             }
             $result = $result || $res->total;
         }
-        return !$this->hasErrors() && $result;
+        return $result;
     }
 
     /**

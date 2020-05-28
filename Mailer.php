@@ -260,7 +260,13 @@ class Mailer extends BaseMailer
         ];
 
         if (count($address) <= $this->maxSimpleCount) {
-            return $this->sendEmail(ArrayHelper::merge($trackParams, $params));
+            $result = false;
+            $emails = (array)$params['email'];
+            foreach ($emails as $email) {
+                $params['email'] = $email;
+                $result = $result || $this->sendEmail(ArrayHelper::merge($trackParams, $params));
+            }
+            return $result;
         }
 
         if ($this->isImportContacts) {

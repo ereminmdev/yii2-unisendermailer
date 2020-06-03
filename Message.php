@@ -9,7 +9,7 @@ use yii\mail\BaseMessage;
  * @package ereminmdev\yii2\unisendermailer
  *
  * @see Mailer
-
+ *
  * @property int $type
  * @property int $listId
  * @property mixed $cc
@@ -150,6 +150,12 @@ class Message extends BaseMessage
      */
     public function setTo($to)
     {
+        if (is_string($to)) {
+            $to = mb_strtolower($to);
+        } elseif (is_array($to)) {
+            $to = array_unique($to);
+        }
+
         $this->_to = $to;
         return $this;
     }

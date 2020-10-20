@@ -432,6 +432,33 @@ class Mailer extends BaseMailer
     }
 
     /**
+     * @param array|string $from set sender as array [email => name] or as string 'name'
+     * @param bool $isEmail set to (senderName,senderEmail) if true, otherwise to smsSenderName
+     */
+    public function setFrom($from, $isEmail = true)
+    {
+        if (empty($from)) {
+            return;
+        }
+
+        $email = is_string($from) ? $from : '';
+        $name = is_string($from) ? $from : '';
+
+        if (is_array($from)) {
+            foreach ($from as $email => $name) {
+                break;
+            }
+        }
+
+        if ($isEmail) {
+            $this->senderName = $email;
+            $this->senderEmail = $name;
+        } else {
+            $this->smsSenderName = $name;
+        }
+    }
+
+    /**
      * @param Message $message
      * @return bool
      */
@@ -441,6 +468,8 @@ class Mailer extends BaseMailer
         if (is_array($address)) {
             $address = implode(', ', array_keys($address));
         }
+
+        $this->setFrom($message->getFrom(), $message->type == Message::TYPE_EMAIL);
 
         Yii::info($this->errorPrefix . 'Sending email "' . $message->getSubject() . '" to "' . $address . '"', __METHOD__);
 

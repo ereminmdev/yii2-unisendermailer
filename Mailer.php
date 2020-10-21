@@ -451,8 +451,8 @@ class Mailer extends BaseMailer
         }
 
         if ($isEmail) {
-            $this->senderName = $email;
-            $this->senderEmail = $name;
+            $this->senderName = $name;
+            $this->senderEmail = $email;
         } else {
             $this->smsSenderName = $name;
         }

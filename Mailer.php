@@ -227,10 +227,14 @@ class Mailer extends BaseMailer
                 'data' => $chunk,
                 'overwrite_tags' => 1,
             ]));
-            foreach ($res->log as $err) {
-                $this->addError($err->message);
+            if ($res) {
+                foreach ($res->log as $err) {
+                    $this->addError($err->message);
+                }
+                $result = $result || $res->total;
+            } else {
+                $result = false;
             }
-            $result = $result || $res->total;
         }
         return $result;
     }

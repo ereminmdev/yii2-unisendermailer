@@ -83,7 +83,7 @@ class Message extends BaseMessage
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function getCharset()
     {
@@ -101,7 +101,7 @@ class Message extends BaseMessage
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function getFrom()
     {
@@ -119,7 +119,7 @@ class Message extends BaseMessage
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function getReplyTo()
     {
@@ -137,7 +137,7 @@ class Message extends BaseMessage
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function getTo()
     {
@@ -161,7 +161,7 @@ class Message extends BaseMessage
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function getCc()
     {
@@ -179,7 +179,7 @@ class Message extends BaseMessage
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function getBcc()
     {
@@ -197,7 +197,7 @@ class Message extends BaseMessage
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function getSubject()
     {
@@ -273,7 +273,7 @@ class Message extends BaseMessage
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function embed($fileName, array $options = [])
     {
@@ -282,7 +282,7 @@ class Message extends BaseMessage
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function embedContent($content, array $options = [])
     {
@@ -317,7 +317,7 @@ class Message extends BaseMessage
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function toString()
     {

@@ -69,6 +69,10 @@ class Mailer extends BaseMailer
      */
     public $maxSimpleCount = 4;
     /**
+     * @var int maximum sms count to use simple sending
+     */
+    public $maxSmsSimpleCount = 10;
+    /**
      * @var bool add error to session addFlash
      */
     public $flashError = true;
@@ -320,7 +324,7 @@ class Mailer extends BaseMailer
             'text' => mb_substr($message->getTextBody(), 0, 1000),
         ];
 
-        if (count($address) <= $this->maxSimpleCount) {
+        if (count($address) <= $this->maxSmsSimpleCount) {
             return $this->sendSms($params);
         }
 

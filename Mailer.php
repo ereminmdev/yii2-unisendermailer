@@ -73,6 +73,10 @@ class Mailer extends BaseMailer
      */
     public $maxSmsSimpleCount = 10;
     /**
+     * @var int size of contacts chunk for import contacts and create campaign
+     */
+    public $chunkSize = 500;
+    /**
      * @var bool add error to session addFlash
      */
     public $flashError = true;
@@ -224,7 +228,7 @@ class Mailer extends BaseMailer
     public function importContacts($field_names, $data)
     {
         $result = false;
-        $chunks = array_chunk($data, 500, true);
+        $chunks = array_chunk($data, $this->chunkSize);
         foreach ($chunks as $chunk) {
             $res = $this->p($this->api->importContacts([
                 'field_names' => $field_names,
@@ -253,7 +257,6 @@ class Mailer extends BaseMailer
         $listId = $this->getListId($message);
 
         $params = [
-            'email' => $address,
             'sender_name' => $this->senderName,
             'sender_email' => $this->senderEmail,
             'subject' => $message->getSubject(),
@@ -269,8 +272,7 @@ class Mailer extends BaseMailer
 
         if (count($address) <= $this->maxSimpleCount) {
             $result = false;
-            $emails = (array)$params['email'];
-            foreach ($emails as $email) {
+            foreach ($address as $email) {
                 $params['email'] = $email;
                 $result = $result || $this->sendEmail(ArrayHelper::merge($trackParams, $params));
             }
@@ -281,29 +283,28 @@ class Mailer extends BaseMailer
             $contacts = array_map(function ($email) use ($listId) {
                 return [$email, $listId];
             }, $address);
-
             $result = $this->importContacts(['email', 'email_list_ids'], $contacts);
         } else {
             $result = true;
         }
 
         if ($result !== false) {
-            $data = $params;
-            $data['list_id'] = $listId;
-            unset($data['email']);
-
-            $result = $this->p($this->api->createEmailMessage($data));
+            $result = $this->p($this->api->createEmailMessage($params));
 
             if ($result !== false) {
                 $messageId = $result->message_id;
 
-                $result = $this->p($this->api->createCampaign(ArrayHelper::merge($trackParams, [
-                    'message_id' => $messageId,
-                    'contacts' => implode(',', $address),
-                    'defer' => 1,
-                ])));
+                $chunks = array_chunk($address, $this->chunkSize);
+                foreach ($chunks as $chunk) {
+                    $result = $result ||
+                        $this->p($this->api->createCampaign(ArrayHelper::merge($trackParams, [
+                            'message_id' => $messageId,
+                            'contacts' => implode(',', $chunk),
+                            'defer' => 1,
+                        ])));
+                }
 
-                return $result !== false ? $result : false;
+                return $result;
             }
         }
         return false;
@@ -317,22 +318,20 @@ class Mailer extends BaseMailer
     {
         $address = $this->getAddress($message);
         $listId = $this->getListId($message);
-
-        $params = [
-            'phone' => implode(',', $address),
-            'sender' => $this->smsSenderName,
-            'text' => mb_substr($message->getTextBody(), 0, 1000),
-        ];
+        $text = mb_substr($message->getTextBody(), 0, 1000);
 
         if (count($address) <= $this->maxSmsSimpleCount) {
-            return $this->sendSms($params);
+            return $this->sendSms([
+                'phone' => implode(',', $address),
+                'sender' => $this->smsSenderName,
+                'text' => $text,
+            ]);
         }
 
         if ($this->isImportContacts) {
             $contacts = array_map(function ($phone) use ($listId) {
                 return [$phone, $listId];
             }, $address);
-
             $result = $this->importContacts(['phone', 'phone_list_ids'], $contacts);
         } else {
             $result = true;
@@ -340,21 +339,25 @@ class Mailer extends BaseMailer
 
         if ($result !== false) {
             $result = $this->p($this->api->createSmsMessage([
-                'sender' => $params['sender'],
-                'body' => $params['text'],
+                'sender' => $this->smsSenderName,
+                'body' => $text,
                 'list_id' => $listId,
             ]));
 
             if ($result !== false) {
                 $messageId = $result->message_id;
 
-                $result = $this->p($this->api->createCampaign([
-                    'message_id' => $messageId,
-                    'contacts' => implode(',', $address),
-                    'defer' => 1,
-                ]));
+                $chunks = array_chunk($address, $this->chunkSize);
+                foreach ($chunks as $chunk) {
+                    $result = $result ||
+                        $this->p($this->api->createCampaign([
+                            'message_id' => $messageId,
+                            'contacts' => implode(',', $chunk),
+                            'defer' => 1,
+                        ]));
+                }
 
-                return $result !== false ? $result : false;
+                return $result;
             }
         }
         return false;

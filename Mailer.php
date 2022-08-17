@@ -274,7 +274,7 @@ class Mailer extends BaseMailer
             $result = false;
             foreach ($address as $email) {
                 $params['email'] = $email;
-                $result = $result || $this->sendEmail(ArrayHelper::merge($trackParams, $params));
+                $result = $this->sendEmail(ArrayHelper::merge($trackParams, $params)) || $result;
             }
             return $result;
         }
@@ -296,12 +296,11 @@ class Mailer extends BaseMailer
 
                 $chunks = array_chunk($address, $this->chunkSize);
                 foreach ($chunks as $chunk) {
-                    $result = $result ||
-                        $this->p($this->api->createCampaign(ArrayHelper::merge($trackParams, [
+                    $result = $this->p($this->api->createCampaign(ArrayHelper::merge($trackParams, [
                             'message_id' => $messageId,
                             'contacts' => implode(',', $chunk),
                             'defer' => 1,
-                        ])));
+                        ]))) || $result;
                 }
 
                 return $result;
@@ -349,12 +348,11 @@ class Mailer extends BaseMailer
 
                 $chunks = array_chunk($address, $this->chunkSize);
                 foreach ($chunks as $chunk) {
-                    $result = $result ||
-                        $this->p($this->api->createCampaign([
+                    $result = $this->p($this->api->createCampaign([
                             'message_id' => $messageId,
                             'contacts' => implode(',', $chunk),
                             'defer' => 1,
-                        ]));
+                        ])) || $result;
                 }
 
                 return $result;

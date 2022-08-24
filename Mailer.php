@@ -6,6 +6,7 @@ use Unisender\ApiWrapper\UnisenderApi;
 use Yii;
 use yii\base\InvalidConfigException;
 use yii\helpers\ArrayHelper;
+use yii\helpers\Url;
 use yii\mail\BaseMailer;
 use yii\mail\MessageInterface;
 
@@ -75,7 +76,7 @@ class Mailer extends BaseMailer
     /**
      * @var int size of contacts chunk for import contacts and create campaign
      */
-    public $chunkSize = 400;
+    public $chunkSize = 500;
     /**
      * @var bool add error to session addFlash
      */
@@ -292,18 +293,7 @@ class Mailer extends BaseMailer
             $result = $this->p($this->api->createEmailMessage($params));
 
             if ($result !== false) {
-                $messageId = $result->message_id;
-
-                $chunks = array_chunk($address, $this->chunkSize);
-                foreach ($chunks as $chunk) {
-                    $result = $this->p($this->api->createCampaign(ArrayHelper::merge($trackParams, [
-                            'message_id' => $messageId,
-                            'contacts' => implode(',', $chunk),
-                            'defer' => 1,
-                        ]))) || $result;
-                }
-
-                return $result;
+                return $this->createCampaign($result->message_id, $address, $trackParams);
             }
         }
         return false;
@@ -344,18 +334,7 @@ class Mailer extends BaseMailer
             ]));
 
             if ($result !== false) {
-                $messageId = $result->message_id;
-
-                $chunks = array_chunk($address, $this->chunkSize);
-                foreach ($chunks as $chunk) {
-                    $result = $this->p($this->api->createCampaign([
-                            'message_id' => $messageId,
-                            'contacts' => implode(',', $chunk),
-                            'defer' => 1,
-                        ])) || $result;
-                }
-
-                return $result;
+                return $this->createCampaign($result->message_id, $address);
             }
         }
         return false;
@@ -488,5 +467,36 @@ class Mailer extends BaseMailer
             return $this->createSmsMessage($message);
         }
         return false;
+    }
+
+    /**
+     * @param int $messageId
+     * @param array $address
+     * @param array $params
+     * @return bool
+     */
+    protected function createCampaign($messageId, $address, $params = [])
+    {
+        $params['message_id'] = $messageId;
+        $params['defer'] = 1;
+
+        if (count($address) < 100000) {
+            $result = $this->p($this->api->createCampaign(ArrayHelper::merge($params, [
+                'contacts' => implode(',', $address),
+            ])));
+        } else {
+            $filename = 'files/unisender/contacts/' . $messageId . '.txt';
+            $path = Yii::getAlias('@webroot/' . $filename);
+
+            @mkdir(dirname($path), 0777, true);
+            $result = @file_put_contents($path, implode("\n", $address));
+
+            if ($result !== false) {
+                $result = $this->p($this->api->createCampaign(ArrayHelper::merge($params, [
+                    'contacts_url' => Url::to('/' . $filename, true),
+                ])));
+            }
+        }
+        return $result;
     }
 }

@@ -5,7 +5,6 @@ namespace ereminmdev\yii2\unisendermailer;
 use Unisender\ApiWrapper\UnisenderApi;
 use Yii;
 use yii\base\InvalidConfigException;
-use yii\helpers\ArrayHelper;
 use yii\helpers\Url;
 use yii\mail\BaseMailer;
 use yii\mail\MessageInterface;
@@ -97,6 +96,14 @@ class Mailer extends BaseMailer
      * @var string prefix for error messages and logs
      */
     public $errorPrefix = 'Unisender: ';
+    /**
+     * @var string path to store contacts
+     */
+    public $contacts_path = '@webroot/files/unisender/contacts/{message_id}.txt';
+    /**
+     * @var string url to stored contacts
+     */
+    public $contacts_url = '@web/files/unisender/contacts/{message_id}.txt';
 
     /**
      * @var UnisenderApi
@@ -275,7 +282,7 @@ class Mailer extends BaseMailer
             $result = false;
             foreach ($address as $email) {
                 $params['email'] = $email;
-                $result = $this->sendEmail(ArrayHelper::merge($trackParams, $params)) || $result;
+                $result = $this->sendEmail(array_merge($trackParams, $params)) || $result;
             }
             return $result;
         }
@@ -481,19 +488,19 @@ class Mailer extends BaseMailer
         $params['defer'] = 1;
 
         if (count($address) < 100000) {
-            $result = $this->p($this->api->createCampaign(ArrayHelper::merge($params, [
+            $result = $this->p($this->api->createCampaign(array_merge($params, [
                 'contacts' => implode(',', $address),
             ])));
         } else {
-            $filename = 'files/unisender/contacts/' . $messageId . '.txt';
-            $path = Yii::getAlias('@webroot/' . $filename);
+            $path = Yii::getAlias(strtr($this->contacts_path, ['{message_id}' => $messageId]));
+            $url = Yii::getAlias(strtr($this->contacts_url, ['{message_id}' => $messageId]));
 
             @mkdir(dirname($path), 0777, true);
             $result = @file_put_contents($path, implode("\n", $address));
 
             if ($result !== false) {
-                $result = $this->p($this->api->createCampaign(ArrayHelper::merge($params, [
-                    'contacts_url' => Url::to('/' . $filename, true),
+                $result = $this->p($this->api->createCampaign(array_merge($params, [
+                    'contacts_url' => Url::to('/' . $url, true),
                 ])));
             }
         }

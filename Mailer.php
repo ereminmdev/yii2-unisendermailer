@@ -75,7 +75,7 @@ class Mailer extends BaseMailer
     /**
      * @var int size of contacts chunk for import contacts and create campaign
      */
-    public $chunkSize = 500;
+    public $chunkSize = 400;
     /**
      * @var bool add error to session addFlash
      */

@@ -153,7 +153,7 @@ class Message extends BaseMessage
         if (is_string($to)) {
             $to = mb_strtolower($to);
         } elseif (is_array($to)) {
-            $to = array_unique($to);
+            $to = array_unique(array_filter($to));
         }
 
         $this->_to = $to;

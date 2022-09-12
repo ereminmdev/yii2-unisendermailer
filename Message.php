@@ -18,6 +18,7 @@ use yii\mail\BaseMessage;
  * @property string $htmlBody
  * @property array $attachments
  * @property mixed $subject
+ * @property string $startTime Date and time to start mailing in format "YYYY-MM-DD hh:mm", which does not exceed 100 days from the current date. If argument is not set, the mailing starts immediately.
  * @property mixed $replyTo
  * @property string $textBody
  * @property mixed $from
@@ -44,6 +45,7 @@ class Message extends BaseMessage
     protected $_cc;
     protected $_bcc;
     protected $_subject;
+    protected $_startTime;
     protected $_textBody;
     protected $_htmlBody;
     protected $_attachments = [];
@@ -211,6 +213,24 @@ class Message extends BaseMessage
     public function setSubject($subject)
     {
         $this->_subject = $subject;
+        return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getStartTime()
+    {
+        return $this->_startTime;
+    }
+
+    /**
+     * @param string $startTime
+     * @return $this
+     */
+    public function setStartTime($startTime)
+    {
+        $this->_startTime = date('Y-m-d H:i', strtotime($startTime));
         return $this;
     }
 

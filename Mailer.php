@@ -179,7 +179,7 @@ class Mailer extends BaseMailer
      */
     public function getTemplate($params = [])
     {
-        return $this->p($this->api->getTemplate($params));
+        return $this->callApi('getTemplate', $params);
     }
 
     /**
@@ -191,7 +191,7 @@ class Mailer extends BaseMailer
      */
     public function sendEmail($params = [])
     {
-        return $this->p($this->api->sendEmail($params));
+        return $this->callApi('sendEmail', $params);
     }
 
     /**
@@ -203,7 +203,7 @@ class Mailer extends BaseMailer
      */
     public function sendSms($params = [])
     {
-        return $this->p($this->api->sendSms($params));
+        return $this->callApi('sendSms', $params);
     }
 
     /**
@@ -217,9 +217,9 @@ class Mailer extends BaseMailer
         $listId = $message->listId ? $message->listId : $this->listId;
 
         if (!$listId) {
-            $result = $this->p($this->api->createList([
+            $result = $this->callApi('createList', [
                 'title' => $message->getSubject(),
-            ]));
+            ]);
 
             if ($result !== false) {
                 return $result->id;
@@ -238,11 +238,11 @@ class Mailer extends BaseMailer
         $result = false;
         $chunks = array_chunk($data, $this->chunkSize);
         foreach ($chunks as $chunk) {
-            $res = $this->p($this->api->importContacts([
+            $res = $this->callApi('importContacts', [
                 'field_names' => $field_names,
                 'data' => $chunk,
                 'overwrite_tags' => 1,
-            ]));
+            ]);
             if ($res) {
                 foreach ($res->log as $err) {
                     $this->addError($err->message);
@@ -297,10 +297,10 @@ class Mailer extends BaseMailer
         }
 
         if ($result !== false) {
-            $result = $this->p($this->api->createEmailMessage($params));
+            $result = $this->callApi('createEmailMessage', $params);
 
             if ($result !== false) {
-                return $this->createCampaign($result->message_id, $address, $trackParams);
+                return $this->createCampaign($result->message_id, $message, $address, $trackParams);
             }
         }
         return false;
@@ -334,14 +334,13 @@ class Mailer extends BaseMailer
         }
 
         if ($result !== false) {
-            $result = $this->p($this->api->createSmsMessage([
+            $result = $this->callApi('createSmsMessage', [
                 'sender' => $this->smsSenderName,
                 'body' => $text,
                 'list_id' => $listId,
-            ]));
-
+            ]);
             if ($result !== false) {
-                return $this->createCampaign($result->message_id, $address);
+                return $this->createCampaign($result->message_id, $message, $address);
             }
         }
         return false;
@@ -361,29 +360,6 @@ class Mailer extends BaseMailer
         }
 
         return $address;
-    }
-
-    /**
-     * Process result.
-     *
-     * @param string $result
-     * @return mixed|false
-     */
-    public function p($result)
-    {
-        if ($result) {
-            $jsonObj = json_decode($result);
-            if (null === $jsonObj) {
-                $this->addError(Yii::t('app', 'Invalid JSON'));
-            } elseif (!empty($jsonObj->error)) {
-                $this->addError(Yii::t('app', 'An error occured: {error}(code: {code})', ['error' => $jsonObj->error, 'code' => $jsonObj->code]));
-            } else {
-                return $jsonObj->result;
-            }
-        } else {
-            $this->addError(Yii::t('app', 'API access error'));
-        }
-        return false;
     }
 
     /**
@@ -478,19 +454,21 @@ class Mailer extends BaseMailer
 
     /**
      * @param int $messageId
+     * @param Message $message
      * @param array $address
      * @param array $params
      * @return bool
      */
-    protected function createCampaign($messageId, $address, $params = [])
+    protected function createCampaign($messageId, $message, $address, $params = [])
     {
         $params['message_id'] = $messageId;
-        $params['defer'] = 1;
+
+        if ($startTime = $message->getStartTime()) {
+            $params['start_time'] = $startTime;
+        }
 
         if (count($address) < 100000) {
-            $result = $this->p($this->api->createCampaign(array_merge($params, [
-                'contacts' => implode(',', $address),
-            ])));
+            $params['contacts'] = implode(',', $address);
         } else {
             $path = Yii::getAlias(strtr($this->contacts_path, ['{message_id}' => $messageId]));
             $url = Yii::getAlias(strtr($this->contacts_url, ['{message_id}' => $messageId]));
@@ -498,12 +476,46 @@ class Mailer extends BaseMailer
             @mkdir(dirname($path), 0777, true);
             $result = @file_put_contents($path, implode("\n", $address));
 
-            if ($result !== false) {
-                $result = $this->p($this->api->createCampaign(array_merge($params, [
-                    'contacts_url' => Url::to('/' . $url, true),
-                ])));
+            if ($result === false) {
+                return false;
             }
+
+            $params['contacts_url'] = Url::to('/' . $url, true);
         }
-        return $result;
+
+        return $this->callApi('createCampaign', $params);
+    }
+
+    /**
+     * @param string $name
+     * @param array $params
+     * @param int $tryCount
+     * @return false
+     */
+    public function callApi($name, $params = [], $tryCount = 5)
+    {
+        $this->setErrors([]);
+
+        $result = $this->api->$name($params);
+
+        if ($result) {
+            $jsonObj = json_decode($result);
+            if (null === $jsonObj) {
+                $this->addError(Yii::t('app', 'Invalid JSON'));
+            } elseif (!empty($jsonObj->error)) {
+                $this->addError(Yii::t('app', 'An error occured: {error}(code: {code})', ['error' => $jsonObj->error, 'code' => $jsonObj->code]));
+            } else {
+                return $jsonObj->result;
+            }
+        } else {
+            $this->addError(Yii::t('app', 'API access error'));
+        }
+
+        if ($this->hasErrors() && ($tryCount > 0)) {
+            sleep(5);
+            return $this->callApi($name, $params, $tryCount - 1);
+        }
+
+        return false;
     }
 }

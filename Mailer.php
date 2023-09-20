@@ -373,7 +373,7 @@ class Mailer extends BaseMailer
 
         Yii::error($message, __METHOD__);
 
-        if ($this->flashError) {
+        if ($this->flashError && Yii::$app->has('session')) {
             Yii::$app->session->addFlash('error', $message);
         }
     }

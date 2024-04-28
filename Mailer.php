@@ -143,7 +143,7 @@ class Mailer extends BaseMailer
     public function getApi()
     {
         if ($this->_api === null) {
-            $encoding = $this->encoding !== null ? $this->encoding : Yii::$app->charset;
+            $encoding = $this->encoding ?? Yii::$app->charset;
 
             if (!$this->apiKey) {
                 throw new InvalidConfigException('"' . get_class($this) . '::apiKey" should be specified.');
@@ -214,7 +214,7 @@ class Mailer extends BaseMailer
      */
     public function getListId($message)
     {
-        $listId = $message->listId ? $message->listId : $this->listId;
+        $listId = $message->listId ?: $this->listId;
 
         if (!$listId) {
             $result = $this->callApi('createList', [
@@ -288,9 +288,7 @@ class Mailer extends BaseMailer
         }
 
         if ($this->isImportContacts) {
-            $contacts = array_map(function ($email) use ($listId) {
-                return [$email, $listId];
-            }, $address);
+            $contacts = array_map(fn($email) => [$email, $listId], $address);
             $result = $this->importContacts(['email', 'email_list_ids'], $contacts);
         } else {
             $result = true;
@@ -325,9 +323,7 @@ class Mailer extends BaseMailer
         }
 
         if ($this->isImportContacts) {
-            $contacts = array_map(function ($phone) use ($listId) {
-                return [$phone, $listId];
-            }, $address);
+            $contacts = array_map(fn($phone) => [$phone, $listId], $address);
             $result = $this->importContacts(['phone', 'phone_list_ids'], $contacts);
         } else {
             $result = true;

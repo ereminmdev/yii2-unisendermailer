@@ -26,8 +26,8 @@ use yii\mail\BaseMessage;
  */
 class Message extends BaseMessage
 {
-    const TYPE_EMAIL = 1;
-    const TYPE_SMS = 2;
+    public const TYPE_EMAIL = 1;
+    public const TYPE_SMS = 2;
 
     /**
      * @var int type of message. Defaults to e-mail.

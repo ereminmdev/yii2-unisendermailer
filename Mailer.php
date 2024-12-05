@@ -55,7 +55,7 @@ class Mailer extends BaseMailer
     /**
      * @var int timeout
      */
-    public $timeout;
+    public $timeout = 5;
     /**
      * @var bool use bzip2 compression
      */
@@ -63,7 +63,7 @@ class Mailer extends BaseMailer
     /**
      * @var int retry count
      */
-    public $retryCount = 4;
+    public $retryCount = 2;
     /**
      * @var int maximum message count to use simple sending
      */

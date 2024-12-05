@@ -486,7 +486,7 @@ class Mailer extends BaseMailer
      * @param string $name
      * @param array $params
      * @param int $tryCount
-     * @return false
+     * @return \stdClass|false
      */
     public function callApi($name, $params = [], $tryCount = 5)
     {

@@ -14,7 +14,7 @@ composer require --prefer-dist ereminmdev/yii2-unisendermailer
 
 or add
 
-```json
+```
 "ereminmdev/yii2-unisendermailer": "~1.0"
 ```
 

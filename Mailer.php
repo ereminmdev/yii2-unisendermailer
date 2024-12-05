@@ -485,10 +485,9 @@ class Mailer extends BaseMailer
     /**
      * @param string $name
      * @param array $params
-     * @param int $tryCount
      * @return \stdClass|false
      */
-    public function callApi($name, $params = [], $tryCount = 5)
+    public function callApi($name, $params = [])
     {
         $this->setErrors([]);
 
@@ -505,11 +504,6 @@ class Mailer extends BaseMailer
             }
         } else {
             $this->addError(Yii::t('app', 'API access error'));
-        }
-
-        if ($this->hasErrors() && ($tryCount > 0)) {
-            sleep(5);
-            return $this->callApi($name, $params, $tryCount - 1);
         }
 
         return false;
